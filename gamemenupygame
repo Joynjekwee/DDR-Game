@@ -1,0 +1,368 @@
+import pygame
+import librosa
+import numpy as np
+import scipy
+import random
+#import serial
+import time
+import pygame
+import librosa
+import numpy as np
+import scipy
+import random
+#SERIAL_PORT='COM4'
+#BAUD_RATE=9600
+#arduino=serial.Serial(SERIAL_PORT,BAUD_RATE,timeout=1)
+#time.sleep(2)
+
+
+
+
+pygame.init()
+pygame.mixer.init()
+#add the name of your audio file and add it in your working directory
+#type the full name below
+audio_file = "tavc-city-pop-361233.mp3"
+#text2=font.render("Game Loading",True,(255,0,0))
+
+
+
+
+
+with open('button2', 'r') as f:
+   script_contents = f.read()
+
+
+button_code=compile(script_contents,'button','exec')
+
+
+with open('leaderboard','r') as f:
+   leaderboard_contents=f.read()
+
+
+leaderboard_compiled=compile(leaderboard_contents,'leaderboard','exec')
+
+
+
+
+def bandpass_filter(signal, lowcut, highcut, fs, order=5):
+   nyquist = 0.5 * fs
+   low = lowcut / nyquist
+   high = highcut / nyquist
+   sos = scipy.signal.butter(order, [low, high], btype='band', output='sos')
+   return scipy.signal.sosfilt(sos, signal)
+
+
+def extract_beats(audio_file):
+   y, sr = librosa.load(audio_file)
+   lowcut = 40.0
+   highcut = 190.0
+   y_filtered = bandpass_filter(y, lowcut, highcut, sr)
+   y_filtered = y_filtered[np.isfinite(y_filtered)]
+   hop_length = 128
+   onset_env = librosa.onset.onset_strength(y=y_filtered, sr=sr, hop_length=hop_length)
+   tempo, beats = librosa.beat.beat_track(onset_envelope=onset_env, sr=sr, hop_length=hop_length)
+   return beats, sr
+
+
+beats, sr = extract_beats(audio_file)
+
+
+def save_beats_to_file(beats, beats_filename):
+   with open(beats_filename, 'w') as f:
+       for i in range(len(beats) - 1):
+           f.write(f"{beats[i]}\n")
+           if (beats[i+1] - beats[i]) > 10:
+               new_beat = (beats[i] + beats[i+1]) // 2
+               f.write(f"{new_beat}\n")
+       f.write(f"{beats[-1]}\n")
+
+
+beats_filename = 'beatmap1.txt'
+save_beats_to_file(beats, beats_filename)
+
+
+def load_beats_from_file(beats_filename):
+   with open(beats_filename, 'r') as f:
+       beats = [int(line.strip()) for line in f.readlines()]
+   return beats
+
+
+beats = load_beats_from_file(beats_filename)
+
+
+screen_width = 800
+screen_height = 600
+screen = pygame.display.set_mode((screen_width, screen_height))
+pygame.display.set_caption("DDR Rhythm Game")
+
+
+clock = pygame.time.Clock()
+
+
+key_mapping = {
+   pygame.K_UP: {"image": "up_arrow.png", "x": 375, "y": 0},
+   pygame.K_DOWN: {"image": "down_arrow.png", "x": 525, "y": 0},
+   pygame.K_LEFT: {"image": "left_arrow.png", "x": 75, "y": 0},
+   pygame.K_RIGHT: {"image": "right_arrow.png", "x": 225, "y": 0},
+}
+
+
+larrow = pygame.image.load('left_arrow_outline.png')
+
+
+new_width = 200
+new_height = 200
+
+
+resized_larrow = pygame.transform.scale(larrow, (new_width, new_height))
+
+
+#Load in the right arrow
+rarrow = pygame.image.load('right_arrow_outline.png')
+
+
+resized_rarrow = pygame.transform.scale(rarrow, (new_width, new_height))
+
+
+#Load in the down arrow
+darrow = pygame.image.load('dowm_arrow_outline.png')
+
+
+resized_darrow = pygame.transform.scale(darrow, (new_width, new_height))
+
+
+#Load in the up arrow
+uarrow = pygame.image.load('up_arrow_outline.png')
+
+
+resized_uarrow = pygame.transform.scale(uarrow, (new_width, new_height))
+
+
+class Arrow(pygame.sprite.Sprite):
+   def __init__(self, image_path, x, y, speed, key):
+       super().__init__()
+       self.image = pygame.image.load(image_path)
+       self.image = pygame.transform.scale(self.image, (200, 200))
+       self.rect = self.image.get_rect()
+       self.rect.x = x
+       self.rect.y = y
+       self.speed = speed
+       self.key = key
+
+
+   def update(self):
+       self.rect.y += self.speed
+       if self.rect.y > screen_height:
+           self.kill()
+
+
+def generate_arrow():
+   arrow_key = random.choice(list(key_mapping.keys()))
+   arrow_info = key_mapping[arrow_key]
+   return Arrow(arrow_info["image"], arrow_info["x"], arrow_info["y"], arrow_speed, arrow_key)
+
+
+
+
+arrow_speed = 7
+arrows = pygame.sprite.Group()
+
+
+score = 0
+consecutive = 0
+pygame.mixer.music.load(audio_file)
+
+
+
+
+def get_song_duration(audio_file):
+   y, sr = librosa.load(audio_file)
+   duration = librosa.get_duration(y=y, sr=sr)
+   return duration
+
+
+
+
+song_duration = get_song_duration(audio_file)
+
+
+pygame.mixer.music.play(-1)
+running = pygame.mixer.music.get_busy()
+current_beat_index = 0
+
+
+while running and pygame.mixer.music.get_busy():
+
+
+    # check for space bar input
+   keys = pygame.key.get_pressed()
+   if keys[pygame.K_SPACE]:
+       screen.fill((0, 0, 0))
+       pygame.display.flip()
+  #     screen.blit(text2, (60, 400))
+       pygame.display.flip()
+       pygame.mixer.music.pause()
+       code_locals={}
+       exec(button_code,code_locals)
+       exit2=code_locals['exit']
+       if exit2==1:
+         running=False
+       pygame.mixer.music.unpause()
+
+
+   for event in pygame.event.get():
+       if event.type == pygame.QUIT:
+           running = False
+
+
+       if event.type == pygame.KEYDOWN:
+           for arrow in arrows:
+               if arrow.rect.y > 400 and arrow.rect.y < 500 and event.key == arrow.key:
+                   score += 1
+                   consecutive += 1
+                   arrow.kill()
+               else:
+                   consecutive = 0
+
+
+   screen.fill((0, 0, 0))
+
+
+   # Calculate the percentage of the song that has played
+   progress = min(1, pygame.mixer.music.get_pos() / (song_duration * 1000))
+
+
+   # Draw the progress bar
+   bar_width = 20
+   bar_height = 400
+   bar_x = screen_width - 50 - bar_width
+   bar_y = (screen_height - bar_height) / 2
+   fill_height = bar_height * progress
+   pygame.draw.rect(screen, (255, 255, 255), (bar_x, bar_y, bar_width, bar_height))
+   pygame.draw.rect(screen, (255, 20, 147), (bar_x, bar_y + bar_height - fill_height, bar_width, fill_height))
+
+
+   # Add in progress title
+   font = pygame.font.Font(None, 36)
+   progress_text = font.render(f"Progress", True, (255, 255, 255))
+   text_x = bar_x - 45
+   text_y = bar_y + bar_height + 10
+   screen.blit(progress_text, (text_x, text_y))
+
+
+   current_time = pygame.time.get_ticks()
+   if current_beat_index < len(beats) and current_time > beats[current_beat_index] * 1000 / sr:
+       if len(arrows) == 0:
+           arrow = generate_arrow()
+           arrows.add(arrow)
+           current_beat_index += 1
+
+
+   arrows.update()
+   arrows.draw(screen)
+
+
+   font = pygame.font.Font(None, 36)
+   score_text = font.render(f"Score: {score}", True, (255, 255, 255))
+   screen.blit(score_text, (10, 10))
+
+
+   if consecutive == 3:
+       font = pygame.font.Font(None, 36)
+       score_text = font.render(f"Well Done!", True, (173, 216, 230))
+       screen.blit(score_text, (100, 100))
+
+
+   if consecutive == 6:
+       font = pygame.font.Font(None, 36)
+       score_text = font.render(f"Amazing!", True, (234, 0, 255))
+       screen.blit(score_text, (100, 100))
+
+
+   if consecutive == 9:
+       font = pygame.font.Font(None, 36)
+       score_text = font.render(f"Wow!", True, (255, 240, 31))
+       screen.blit(score_text, (100, 100))
+
+
+   if consecutive == 12:
+       font = pygame.font.Font(None, 36)
+       score_text = font.render(f"Impressive!", True, (255, 0, 139))
+       screen.blit(score_text, (100, 100))
+
+
+
+
+   screen.blit(resized_larrow, (75, 450))
+   screen.blit(resized_rarrow, (225, 450))
+   screen.blit(resized_uarrow, (375, 450))
+   screen.blit(resized_darrow, (525, 450))
+
+
+   pygame.display.flip()
+   clock.tick(100)
+
+
+   if pygame.time.get_ticks() / 1000 >= song_duration:
+       running = False
+
+
+pygame.mixer.music.stop()
+pygame.quit()
+
+
+def save_score_to_file(name, score, filename):
+   with open(filename, 'a') as f: #opens file with append mode(add content to end of file)
+       f.write(f"{name}: {score}\n") #writes string to file
+
+
+#define func to sort scores in a file
+def sort_scores_file(filename):
+   scores = [] #save scores
+
+
+#read scores from file and append to the list
+   with open(filename, 'r') as f:
+       for line in f:
+           name, score_str = line.strip().split(': ')
+           score = int(score_str)
+           scores.append((name, score))
+
+
+   scores.sort(key=lambda x: x[1], reverse=True)
+
+
+   with open(filename, 'w') as f:
+       for name, score in scores:
+           f.write(f"{name}: {score}\n")
+
+
+# Save the score to a text file with the user's name
+filename = "Score_Sheet.txt"
+
+
+import userinput
+
+
+u = userinput.user(score, filename)
+print(u)
+
+
+#name = input("Please enter your name: ")
+
+
+# Replace this with the actual score from your game
+
+
+#save_score_to_file(name, score, filename)
+sort_scores_file(filename)
+
+
+run=True
+while run:
+   code_locals={}
+   exec(leaderboard_compiled,code_locals)
+   mainmenu2=code_locals['mainmenu']
+   if mainmenu2==1:
+         run=False

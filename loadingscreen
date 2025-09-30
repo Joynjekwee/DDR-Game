@@ -1,0 +1,91 @@
+import pygame
+
+
+pygame.init()
+
+
+# Set up screen
+screen_width = 800
+screen_height = 600
+screen = pygame.display.set_mode((screen_width, screen_height))
+
+
+# Set up loading bar
+loading_bar_width = 600
+loading_bar_height = 50
+loading_bar_x = screen_width/2 - loading_bar_width/2
+loading_bar_y = screen_height/2 - loading_bar_height/2
+loading_bar_fill_color = (255, 255, 255)
+loading_bar_outline_color = (255, 0, 0)
+loading_bar_fill_width = 0
+
+
+# Set up timer
+start_time = pygame.time.get_ticks()
+elapsed_time = 0
+run=True
+while run==True:
+   # Check for events
+   for event in pygame.event.get():
+       if event.type == pygame.QUIT:
+           pygame.quit()
+           quit()
+
+
+
+
+   loading_image = pygame.image.load('loading_menu.png')
+   screen.blit(loading_image, (0,0))
+
+
+   # Calculate elapsed time
+   current_time = pygame.time.get_ticks()
+   elapsed_time = current_time - start_time
+
+
+   # Update loading bar
+   if elapsed_time < 6000:
+       loading_bar_fill_width = loading_bar_width * (elapsed_time / 6000)
+
+
+   # Draw loading bar
+   # screen.fill((0, 0, 0))
+   pygame.draw.rect(screen, loading_bar_outline_color, (loading_bar_x, loading_bar_y, loading_bar_width, loading_bar_height), 3)
+   pygame.draw.rect(screen, loading_bar_fill_color, (loading_bar_x, loading_bar_y, loading_bar_fill_width, loading_bar_height))
+
+
+   # Add percentage
+   if elapsed_time <=7200:
+       if int(elapsed_time / 6000 * 100)<=100:
+         percentage = int(elapsed_time / 6000 * 100)
+       if int(elapsed_time / 6000 * 100)>=100:
+         percentage = 100
+
+
+
+
+       font = pygame.font.Font(None, 36)
+       score_text = font.render(f"{percentage}%", True, (255, 255, 255))
+       screen.blit(score_text, (10, 10))
+
+
+
+
+
+
+
+
+
+
+   if percentage==100:
+      run=False
+
+
+
+
+
+
+
+
+   # Update screen
+   pygame.display.update()
