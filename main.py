@@ -45,7 +45,7 @@ loading=compile(loading_screen,'loadingscreen','exec')
 
 background_image = pygame.image.load('start_menu.png')
 
-
+#
 filename="Score_Sheet.txt"
 return3=0
 running = True
