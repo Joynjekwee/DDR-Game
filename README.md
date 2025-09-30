@@ -61,3 +61,6 @@ Librosa
 
 Here is a link to gameplay so you can see the features!!
 https://youtu.be/yTqW5XUXe7c
+
+![IMG_1545](https://github.com/user-attachments/assets/081def2d-b097-4247-9bdb-7705952821cb)
+
