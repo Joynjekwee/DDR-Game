@@ -65,7 +65,8 @@ https://youtu.be/yTqW5XUXe7c
 
 ## 🖼️ DDR Board
 
-<img src="https://raw.githubusercontent.com/Joynjekwee/DDR-Game/main/IMG_1545.jpeg" alt="DDR Board" width="400"/>
+![DDR Board](https://raw.githubusercontent.com/Joynjekwee/DDR-Game/main/IMG_1545.jpeg)
+
 
 
 
