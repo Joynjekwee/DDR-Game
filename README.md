@@ -62,4 +62,9 @@ Librosa
 Here is a link to gameplay so you can see the features!!
 https://youtu.be/yTqW5XUXe7c
 
+## 🖼️ DDR Board
+
+![DDR Board](https://raw.githubusercontent.com/Joynjekwee/DDR-Game/main/IMG_1545.jpeg)
+
+
 
