@@ -50,3 +50,11 @@ SPACE → Pause menu
 ESC / Quit button → Exit game
 cd ddr-game
 
+🙌 Acknowledgements
+
+Pygame
+ for graphics and audio
+
+Librosa
+ for beat tracking and audio analysis
+
